@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { User, CreditCard } from 'lucide-react';
+import { User, CreditCard, Lock } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SettingsPage() {
@@ -11,6 +11,10 @@ export default function SettingsPage() {
   const [plan, setPlan] = useState('free');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     async function loadProfile() {
@@ -48,6 +52,34 @@ export default function SettingsPage() {
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordMessage(null);
+
+    if (newPassword.length < 6) {
+      setPasswordMessage({ type: 'error', text: 'Password must be at least 6 characters.' });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage({ type: 'error', text: 'Passwords do not match.' });
+      return;
+    }
+
+    setPasswordSaving(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+    if (error) {
+      setPasswordMessage({ type: 'error', text: error.message });
+    } else {
+      setPasswordMessage({ type: 'success', text: 'Password updated successfully.' });
+      setNewPassword('');
+      setConfirmPassword('');
+    }
+    setPasswordSaving(false);
   };
 
   const planLabels: Record<string, string> = {
@@ -104,6 +136,72 @@ export default function SettingsPage() {
             className="bg-primary text-white py-2.5 px-5 rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 font-medium text-sm shadow-sm shadow-primary/20"
           >
             {saving ? 'Saving...' : saved ? 'Saved!' : 'Save changes'}
+          </button>
+        </form>
+      </div>
+
+      {/* Security Section */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center">
+            <Lock size={18} className="text-primary" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-slate-900">Security</h2>
+            <p className="text-xs text-slate-500">Change your password</p>
+          </div>
+        </div>
+
+        <form onSubmit={handlePasswordChange} className="space-y-4">
+          <div>
+            <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 mb-1.5">
+              New password
+            </label>
+            <input
+              id="newPassword"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+              minLength={6}
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-sm"
+              placeholder="At least 6 characters"
+            />
+          </div>
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1.5">
+              Confirm new password
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              minLength={6}
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-sm"
+              placeholder="Confirm your new password"
+            />
+          </div>
+
+          {passwordMessage && (
+            <div className={`rounded-lg px-4 py-2.5 border ${
+              passwordMessage.type === 'success'
+                ? 'bg-green-50 border-green-100'
+                : 'bg-red-50 border-red-100'
+            }`}>
+              <p className={`text-sm ${passwordMessage.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>
+                {passwordMessage.text}
+              </p>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={passwordSaving}
+            className="bg-primary text-white py-2.5 px-5 rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 font-medium text-sm shadow-sm shadow-primary/20"
+          >
+            {passwordSaving ? 'Updating...' : 'Update password'}
           </button>
         </form>
       </div>

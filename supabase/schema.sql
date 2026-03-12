@@ -6,7 +6,7 @@ create table profiles (
   email text,
   avatar_url text,
   stripe_customer_id text,
-  plan text default 'free', -- free | solo | pro | agency
+  plan text default 'free', -- free | pro
   created_at timestamp with time zone default now()
 );
 
@@ -101,6 +101,8 @@ create policy "Devs can create annotations on own projects" on annotations for i
   with check (project_id in (select id from projects where dev_id = auth.uid()));
 create policy "Devs can update annotations on own projects" on annotations for update
   using (project_id in (select id from projects where dev_id = auth.uid()));
+create policy "Devs can delete annotations on own projects" on annotations for delete
+  using (project_id in (select id from projects where dev_id = auth.uid()));
 
 -- Comments: devs can manage comments on their project annotations
 create policy "Devs can view comments on own project annotations" on comments for select
@@ -111,17 +113,24 @@ create policy "Devs can create comments on own project annotations" on comments 
   with check (annotation_id in (
     select a.id from annotations a join projects p on a.project_id = p.id where p.dev_id = auth.uid()
   ));
+create policy "Devs can delete comments on own project annotations" on comments for delete
+  using (annotation_id in (
+    select a.id from annotations a join projects p on a.project_id = p.id where p.dev_id = auth.uid()
+  ));
 
 -- Messages: devs can manage messages on their projects
 create policy "Devs can view messages on own projects" on messages for select
   using (project_id in (select id from projects where dev_id = auth.uid()));
 create policy "Devs can create messages on own projects" on messages for insert
   with check (project_id in (select id from projects where dev_id = auth.uid()));
+create policy "Devs can delete messages on own projects" on messages for delete
+  using (project_id in (select id from projects where dev_id = auth.uid()));
 
 -- Invoices: devs can manage invoices on their projects
 create policy "Devs can view own invoices" on invoices for select using (dev_id = auth.uid());
 create policy "Devs can create invoices" on invoices for insert with check (dev_id = auth.uid());
 create policy "Devs can update own invoices" on invoices for update using (dev_id = auth.uid());
+create policy "Devs can delete own invoices" on invoices for delete using (dev_id = auth.uid());
 
 -- Enable Realtime for messages
 alter publication supabase_realtime add table messages;

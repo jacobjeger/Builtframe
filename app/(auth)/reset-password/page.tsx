@@ -5,20 +5,31 @@ import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('');
+export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
     setLoading(true);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
       setError(error.message);
@@ -26,43 +37,43 @@ export default function LoginPage() {
       return;
     }
 
-    router.push('/dashboard');
-    router.refresh();
+    router.push('/login');
   };
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-      <h2 className="text-2xl font-bold text-slate-900 mb-1">Welcome back</h2>
-      <p className="text-sm text-slate-500 mb-6">Sign in to your Builtframe account</p>
+      <h2 className="text-2xl font-bold text-slate-900 mb-1">Set new password</h2>
+      <p className="text-sm text-slate-500 mb-6">Enter your new password below.</p>
 
-      <form onSubmit={handleLogin} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-slate-50/50 text-sm"
-            placeholder="you@example.com"
-          />
-        </div>
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label htmlFor="password" className="block text-sm font-medium text-slate-700">Password</label>
-            <Link href="/forgot-password" className="text-xs text-primary hover:text-primary-dark font-medium transition-colors">
-              Forgot password?
-            </Link>
-          </div>
+          <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1.5">
+            New password
+          </label>
           <input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            minLength={6}
             className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-slate-50/50 text-sm"
-            placeholder="Enter your password"
+            placeholder="At least 6 characters"
+          />
+        </div>
+        <div>
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1.5">
+            Confirm password
+          </label>
+          <input
+            id="confirmPassword"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            minLength={6}
+            className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-slate-50/50 text-sm"
+            placeholder="Confirm your new password"
           />
         </div>
 
@@ -77,14 +88,13 @@ export default function LoginPage() {
           disabled={loading}
           className="w-full bg-primary text-white py-2.5 px-4 rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 font-medium text-sm shadow-sm shadow-primary/20"
         >
-          {loading ? 'Signing in...' : 'Sign in'}
+          {loading ? 'Updating...' : 'Update password'}
         </button>
       </form>
 
       <p className="text-center text-sm text-slate-500 mt-6">
-        Don&apos;t have an account?{' '}
-        <Link href="/signup" className="text-primary hover:text-primary-dark font-medium transition-colors">
-          Sign up
+        <Link href="/login" className="text-primary hover:text-primary-dark font-medium transition-colors">
+          Back to sign in
         </Link>
       </p>
     </div>

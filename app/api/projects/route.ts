@@ -30,6 +30,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Check plan limits
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('plan')
+    .eq('id', user.id)
+    .single();
+
+  const plan = profile?.plan || 'free';
+
+  if (plan === 'free') {
+    const { count } = await supabase
+      .from('projects')
+      .select('*', { count: 'exact', head: true })
+      .eq('dev_id', user.id);
+
+    if ((count ?? 0) >= 1) {
+      return NextResponse.json(
+        { error: 'Free plan limited to 1 project. Upgrade to Pro for unlimited projects.' },
+        { status: 403 }
+      );
+    }
+  }
+
   const body = await request.json();
 
   const { data, error } = await supabase
