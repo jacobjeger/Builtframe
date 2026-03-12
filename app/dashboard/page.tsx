@@ -23,6 +23,18 @@ export default async function DashboardPage() {
   const totalProjects = projects?.length || 0;
   const activeProjects = projects?.filter((p) => p.status === 'active').length || 0;
 
+  // Query real open annotation count across all projects
+  let openAnnotations = 0;
+  if (projects && projects.length > 0) {
+    const projectIds = projects.map((p) => p.id);
+    const { count } = await supabase
+      .from('annotations')
+      .select('*', { count: 'exact', head: true })
+      .in('project_id', projectIds)
+      .eq('status', 'open');
+    openAnnotations = count || 0;
+  }
+
   const greeting = profile?.full_name ? `Welcome back, ${profile.full_name.split(' ')[0]}` : 'Welcome back';
 
   return (
@@ -72,7 +84,7 @@ export default async function DashboardPage() {
               <Pin size={20} className="text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">&mdash;</p>
+              <p className="text-2xl font-bold text-slate-900">{openAnnotations}</p>
               <p className="text-xs text-slate-500">Open annotations</p>
             </div>
           </div>

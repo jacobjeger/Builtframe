@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { MessageSquare, Pin, MousePointerClick } from 'lucide-react';
+import { MessageSquare, Pin, MousePointerClick, CreditCard } from 'lucide-react';
 import PreviewFrame from '@/components/PreviewFrame';
 import CommentPanel from '@/components/CommentPanel';
 import MessageThread from '@/components/MessageThread';
-import type { Project, Annotation } from '@/types';
+import InvoiceCard from '@/components/InvoiceCard';
+import type { Project, Annotation, Invoice } from '@/types';
 
 export default function ClientPortalPage() {
   const params = useParams();
@@ -14,8 +15,9 @@ export default function ClientPortalPage() {
 
   const [project, setProject] = useState<Project | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [activeAnnotation, setActiveAnnotation] = useState<Annotation | null>(null);
-  const [tab, setTab] = useState<'feedback' | 'messages'>('feedback');
+  const [tab, setTab] = useState<'feedback' | 'messages' | 'invoices'>('feedback');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [clientName, setClientName] = useState('');
@@ -29,6 +31,7 @@ export default function ClientPortalPage() {
   useEffect(() => {
     if (project) {
       fetchAnnotations();
+      fetchInvoices();
       setClientName(project.client_name || 'Client');
     }
   }, [project?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -42,6 +45,14 @@ export default function ClientPortalPage() {
       setError('This link is invalid or has expired.');
     }
     setLoading(false);
+  };
+
+  const fetchInvoices = async () => {
+    if (!project) return;
+    const res = await fetch(`/api/invoices?projectId=${project.id}&token=${token}`);
+    if (res.ok) {
+      setInvoices(await res.json());
+    }
   };
 
   const fetchAnnotations = async () => {
@@ -146,6 +157,17 @@ export default function ClientPortalPage() {
             <MessageSquare size={16} />
             Messages
           </button>
+          <button
+            onClick={() => { setTab('invoices'); setActiveAnnotation(null); }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              tab === 'invoices'
+                ? 'bg-primary/10 text-primary'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <CreditCard size={16} />
+            Invoices
+          </button>
         </div>
       </header>
 
@@ -170,7 +192,34 @@ export default function ClientPortalPage() {
 
         {/* Side panel */}
         <div className="w-full lg:w-96 border-t lg:border-t-0 lg:border-l border-slate-200 bg-white flex flex-col h-80 lg:h-auto">
-          {tab === 'messages' ? (
+          {tab === 'invoices' ? (
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {invoices.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <CreditCard size={20} className="text-slate-400" />
+                  </div>
+                  <p className="text-sm text-slate-500 font-medium">No invoices yet</p>
+                </div>
+              ) : (
+                invoices.map((invoice) => (
+                  <div key={invoice.id}>
+                    <InvoiceCard invoice={invoice} />
+                    {invoice.status === 'sent' && invoice.stripe_payment_link && (
+                      <a
+                        href={invoice.stripe_payment_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block mt-1.5 ml-1 text-[11px] text-primary hover:text-primary-dark transition-colors font-medium"
+                      >
+                        Pay now &rarr;
+                      </a>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          ) : tab === 'messages' ? (
             <MessageThread
               projectId={project.id}
               authorType="client"

@@ -12,10 +12,13 @@ import {
   Clock,
   AlertCircle,
   RefreshCw,
+  CreditCard,
+  Plus,
 } from 'lucide-react';
 import PreviewFrame from '@/components/PreviewFrame';
 import CommentPanel from '@/components/CommentPanel';
-import type { Project, Annotation } from '@/types';
+import InvoiceCard from '@/components/InvoiceCard';
+import type { Project, Annotation, Invoice } from '@/types';
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -23,17 +26,26 @@ export default function ProjectDetailPage() {
 
   const [project, setProject] = useState<Project | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [activeAnnotation, setActiveAnnotation] = useState<Annotation | null>(null);
-  const [tab, setTab] = useState<'annotations' | 'messages'>('annotations');
+  const [tab, setTab] = useState<'annotations' | 'messages' | 'invoices'>('annotations');
   const [loading, setLoading] = useState(true);
   const [devName, setDevName] = useState('Developer');
   const [newAnnotationComment, setNewAnnotationComment] = useState('');
   const [pendingPosition, setPendingPosition] = useState<{ x: number; y: number } | null>(null);
   const [inviting, setInviting] = useState(false);
 
+  // Invoice form state
+  const [showInvoiceForm, setShowInvoiceForm] = useState(false);
+  const [invoiceDesc, setInvoiceDesc] = useState('');
+  const [invoiceAmount, setInvoiceAmount] = useState('');
+  const [invoiceDueDate, setInvoiceDueDate] = useState('');
+  const [creatingInvoice, setCreatingInvoice] = useState(false);
+
   useEffect(() => {
     fetchProject();
     fetchAnnotations();
+    fetchInvoices();
     fetchDevName();
   }, [projectId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -52,6 +64,13 @@ export default function ProjectDetailPage() {
     const res = await fetch(`/api/annotations?projectId=${projectId}`);
     if (res.ok) {
       setAnnotations(await res.json());
+    }
+  };
+
+  const fetchInvoices = async () => {
+    const res = await fetch(`/api/invoices?projectId=${projectId}`);
+    if (res.ok) {
+      setInvoices(await res.json());
     }
   };
 
@@ -117,6 +136,48 @@ export default function ProjectDetailPage() {
       body: JSON.stringify({ projectId }),
     });
     setInviting(false);
+  };
+
+  const handleCreateInvoice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!invoiceAmount || creatingInvoice) return;
+
+    setCreatingInvoice(true);
+    const amountCents = Math.round(parseFloat(invoiceAmount) * 100);
+
+    const res = await fetch('/api/invoices', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        project_id: projectId,
+        amount_cents: amountCents,
+        description: invoiceDesc || null,
+        due_date: invoiceDueDate || null,
+      }),
+    });
+
+    if (res.ok) {
+      setInvoiceDesc('');
+      setInvoiceAmount('');
+      setInvoiceDueDate('');
+      setShowInvoiceForm(false);
+      fetchInvoices();
+    }
+    setCreatingInvoice(false);
+  };
+
+  const handleInvoiceStatusChange = async (invoiceId: string, status: string) => {
+    const res = await fetch('/api/invoices', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: invoiceId, status }),
+    });
+
+    if (res.ok) {
+      setInvoices((prev) =>
+        prev.map((inv) => (inv.id === invoiceId ? { ...inv, status: status as Invoice['status'] } : inv))
+      );
+    }
   };
 
   if (loading) {
@@ -196,25 +257,30 @@ export default function ProjectDetailPage() {
         <div className="flex border-b border-slate-200">
           <button
             onClick={() => { setTab('annotations'); setActiveAnnotation(null); }}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-              tab === 'annotations'
-                ? 'text-primary border-b-2 border-primary'
-                : 'text-slate-500 hover:text-slate-700'
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-3 text-xs font-medium transition-colors ${
+              tab === 'annotations' ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-slate-700'
             }`}
           >
-            <Pin size={16} />
+            <Pin size={14} />
             Annotations ({annotations.length})
           </button>
           <button
             onClick={() => { setTab('messages'); setActiveAnnotation(null); }}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-              tab === 'messages'
-                ? 'text-primary border-b-2 border-primary'
-                : 'text-slate-500 hover:text-slate-700'
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-3 text-xs font-medium transition-colors ${
+              tab === 'messages' ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-slate-700'
             }`}
           >
-            <MessageSquare size={16} />
+            <MessageSquare size={14} />
             Messages
+          </button>
+          <button
+            onClick={() => { setTab('invoices'); setActiveAnnotation(null); }}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-3 text-xs font-medium transition-colors ${
+              tab === 'invoices' ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <CreditCard size={14} />
+            Invoices ({invoices.length})
           </button>
         </div>
 
@@ -270,7 +336,7 @@ export default function ProjectDetailPage() {
                       <Pin size={20} className="text-slate-400" />
                     </div>
                     <p className="text-sm text-slate-500 font-medium">No annotations yet</p>
-                    <p className="text-xs text-slate-400 mt-1">Switch to annotation mode and click on the preview to add one</p>
+                    <p className="text-xs text-slate-400 mt-1">Switch to annotation mode and click on the preview</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-100">
@@ -315,6 +381,115 @@ export default function ProjectDetailPage() {
                   <RefreshCw size={12} />
                   Refresh
                 </button>
+              </div>
+            </div>
+          ) : tab === 'invoices' ? (
+            <div className="h-full flex flex-col">
+              {/* Create invoice form */}
+              {showInvoiceForm ? (
+                <form onSubmit={handleCreateInvoice} className="p-3 border-b border-slate-200 bg-slate-50 space-y-2.5">
+                  <p className="text-xs font-medium text-slate-700">New invoice</p>
+                  <input
+                    type="text"
+                    value={invoiceDesc}
+                    onChange={(e) => setInvoiceDesc(e.target.value)}
+                    placeholder="Description (e.g. Homepage redesign)"
+                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        value={invoiceAmount}
+                        onChange={(e) => setInvoiceAmount(e.target.value)}
+                        placeholder="0.00"
+                        required
+                        className="w-full pl-7 pr-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      />
+                    </div>
+                    <input
+                      type="date"
+                      value={invoiceDueDate}
+                      onChange={(e) => setInvoiceDueDate(e.target.value)}
+                      className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      placeholder="Due date"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={!invoiceAmount || creatingInvoice}
+                      className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm disabled:opacity-50 hover:bg-primary-dark transition-colors font-medium"
+                    >
+                      {creatingInvoice ? 'Creating...' : 'Create'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowInvoiceForm(false)}
+                      className="px-3 py-1.5 text-slate-500 text-sm hover:text-slate-700 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="p-3 border-b border-slate-200">
+                  <button
+                    onClick={() => setShowInvoiceForm(true)}
+                    className="w-full flex items-center justify-center gap-2 text-xs font-medium text-primary hover:text-primary-dark transition-colors py-1"
+                  >
+                    <Plus size={14} />
+                    Create Invoice
+                  </button>
+                </div>
+              )}
+
+              {/* Invoice list */}
+              <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                {invoices.length === 0 ? (
+                  <div className="text-center py-12 px-4">
+                    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <CreditCard size={20} className="text-slate-400" />
+                    </div>
+                    <p className="text-sm text-slate-500 font-medium">No invoices yet</p>
+                    <p className="text-xs text-slate-400 mt-1">Create an invoice for this project</p>
+                  </div>
+                ) : (
+                  invoices.map((invoice) => (
+                    <div key={invoice.id}>
+                      <InvoiceCard invoice={invoice} />
+                      {invoice.status === 'draft' && (
+                        <div className="flex gap-1.5 mt-1.5 ml-1">
+                          <button
+                            onClick={() => handleInvoiceStatusChange(invoice.id, 'sent')}
+                            className="text-[11px] text-primary hover:text-primary-dark transition-colors font-medium"
+                          >
+                            Mark as sent
+                          </button>
+                        </div>
+                      )}
+                      {invoice.status === 'sent' && (
+                        <div className="flex gap-3 mt-1.5 ml-1">
+                          <button
+                            onClick={() => handleInvoiceStatusChange(invoice.id, 'paid')}
+                            className="text-[11px] text-green-600 hover:text-green-700 transition-colors font-medium"
+                          >
+                            Mark as paid
+                          </button>
+                          <button
+                            onClick={() => handleInvoiceStatusChange(invoice.id, 'overdue')}
+                            className="text-[11px] text-red-500 hover:text-red-600 transition-colors font-medium"
+                          >
+                            Mark overdue
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           ) : (

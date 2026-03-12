@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { User, CreditCard, Shield } from 'lucide-react';
+import { User, CreditCard } from 'lucide-react';
+import Link from 'next/link';
 
 export default function SettingsPage() {
   const [fullName, setFullName] = useState('');
@@ -51,9 +52,8 @@ export default function SettingsPage() {
 
   const planLabels: Record<string, string> = {
     free: 'Free',
-    solo: 'Solo — $19/mo',
-    pro: 'Pro — $49/mo',
-    agency: 'Agency — $99/mo',
+    pro: 'Pro — $29/mo',
+    agency: 'Agency — $79/mo',
   };
 
   return (
@@ -128,32 +128,9 @@ export default function SettingsPage() {
               {plan === 'free' ? 'Limited to 1 project' : 'Your current plan'}
             </p>
           </div>
-          <button className="text-sm font-medium text-primary hover:text-primary-dark transition-colors">
+          <Link href="/#pricing" className="text-sm font-medium text-primary hover:text-primary-dark transition-colors">
             {plan === 'free' ? 'Upgrade' : 'Manage'}
-          </button>
-        </div>
-      </div>
-
-      {/* Danger Zone */}
-      <div className="bg-white rounded-xl border border-red-100 p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center">
-            <Shield size={18} className="text-red-500" />
-          </div>
-          <div>
-            <h2 className="font-semibold text-slate-900">Danger Zone</h2>
-            <p className="text-xs text-slate-500">Irreversible actions</p>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between p-4 bg-red-50/50 rounded-lg border border-red-100">
-          <div>
-            <p className="text-sm font-medium text-slate-900">Delete account</p>
-            <p className="text-xs text-slate-500 mt-0.5">Permanently delete your account and all data</p>
-          </div>
-          <button className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors">
-            Delete
-          </button>
+          </Link>
         </div>
       </div>
     </div>
