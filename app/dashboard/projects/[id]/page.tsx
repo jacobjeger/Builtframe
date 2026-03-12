@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   MessageSquare,
@@ -14,6 +15,10 @@ import {
   RefreshCw,
   CreditCard,
   Plus,
+  Settings,
+  Trash2,
+  X,
+  Save,
 } from 'lucide-react';
 import PreviewFrame from '@/components/PreviewFrame';
 import CommentPanel from '@/components/CommentPanel';
@@ -22,6 +27,7 @@ import type { Project, Annotation, Invoice } from '@/types';
 
 export default function ProjectDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const projectId = params.id as string;
 
   const [project, setProject] = useState<Project | null>(null);
@@ -41,6 +47,12 @@ export default function ProjectDetailPage() {
   const [invoiceAmount, setInvoiceAmount] = useState('');
   const [invoiceDueDate, setInvoiceDueDate] = useState('');
   const [creatingInvoice, setCreatingInvoice] = useState(false);
+
+  // Project edit/delete state
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ name: '', client_name: '', client_email: '', website_url: '', status: 'active' });
+  const [savingProject, setSavingProject] = useState(false);
+  const [deletingProject, setDeletingProject] = useState(false);
 
   useEffect(() => {
     fetchProject();
@@ -138,6 +150,59 @@ export default function ProjectDetailPage() {
     setInviting(false);
   };
 
+  const startEditing = () => {
+    if (!project) return;
+    setEditForm({
+      name: project.name,
+      client_name: project.client_name || '',
+      client_email: project.client_email || '',
+      website_url: project.website_url || '',
+      status: project.status,
+    });
+    setEditing(true);
+  };
+
+  const handleSaveProject = async () => {
+    setSavingProject(true);
+    const res = await fetch('/api/projects', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: projectId, ...editForm }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setProject(updated);
+      setEditing(false);
+    }
+    setSavingProject(false);
+  };
+
+  const handleDeleteProject = async () => {
+    if (!confirm('Delete this project? This will also delete all annotations, comments, messages, and invoices. This cannot be undone.')) return;
+    setDeletingProject(true);
+    const res = await fetch('/api/projects', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: projectId }),
+    });
+    if (res.ok) {
+      router.push('/dashboard');
+    }
+    setDeletingProject(false);
+  };
+
+  const handleDeleteInvoice = async (invoiceId: string) => {
+    if (!confirm('Delete this draft invoice?')) return;
+    const res = await fetch('/api/invoices', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: invoiceId }),
+    });
+    if (res.ok) {
+      setInvoices((prev) => prev.filter((inv) => inv.id !== invoiceId));
+    }
+  };
+
   const handleCreateInvoice = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!invoiceAmount || creatingInvoice) return;
@@ -222,17 +287,96 @@ export default function ProjectDetailPage() {
               <p className="text-xs text-slate-500">{project.client_name}</p>
             )}
           </div>
-          {project.client_email && (
+          <div className="flex items-center gap-2">
+            {project.client_email && (
+              <button
+                onClick={handleInvite}
+                disabled={inviting}
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
+              >
+                <Send size={12} />
+                {inviting ? 'Sending...' : 'Invite Client'}
+              </button>
+            )}
             <button
-              onClick={handleInvite}
-              disabled={inviting}
-              className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
+              onClick={startEditing}
+              className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-100"
+              title="Project settings"
             >
-              <Send size={12} />
-              {inviting ? 'Sending...' : 'Invite Client'}
+              <Settings size={16} />
             </button>
-          )}
+          </div>
         </div>
+
+        {/* Edit panel */}
+        {editing && (
+          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-slate-700">Edit project</p>
+              <button onClick={() => setEditing(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={14} />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="text"
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                placeholder="Project name"
+                className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              />
+              <select
+                value={editForm.status}
+                onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white"
+              >
+                <option value="active">Active</option>
+                <option value="in_review">In review</option>
+                <option value="completed">Completed</option>
+                <option value="archived">Archived</option>
+              </select>
+              <input
+                type="text"
+                value={editForm.client_name}
+                onChange={(e) => setEditForm({ ...editForm, client_name: e.target.value })}
+                placeholder="Client name"
+                className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              />
+              <input
+                type="email"
+                value={editForm.client_email}
+                onChange={(e) => setEditForm({ ...editForm, client_email: e.target.value })}
+                placeholder="Client email"
+                className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              />
+              <input
+                type="url"
+                value={editForm.website_url}
+                onChange={(e) => setEditForm({ ...editForm, website_url: e.target.value })}
+                placeholder="Website URL"
+                className="col-span-2 px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <button
+                onClick={handleDeleteProject}
+                disabled={deletingProject}
+                className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-600 transition-colors disabled:opacity-50"
+              >
+                <Trash2 size={12} />
+                {deletingProject ? 'Deleting...' : 'Delete project'}
+              </button>
+              <button
+                onClick={handleSaveProject}
+                disabled={savingProject}
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
+              >
+                <Save size={12} />
+                {savingProject ? 'Saving...' : 'Save changes'}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 p-4 min-h-0 bg-slate-50">
           {project.website_url ? (
@@ -462,12 +606,18 @@ export default function ProjectDetailPage() {
                     <div key={invoice.id}>
                       <InvoiceCard invoice={invoice} />
                       {invoice.status === 'draft' && (
-                        <div className="flex gap-1.5 mt-1.5 ml-1">
+                        <div className="flex gap-3 mt-1.5 ml-1">
                           <button
                             onClick={() => handleInvoiceStatusChange(invoice.id, 'sent')}
                             className="text-[11px] text-primary hover:text-primary-dark transition-colors font-medium"
                           >
                             Mark as sent
+                          </button>
+                          <button
+                            onClick={() => handleDeleteInvoice(invoice.id)}
+                            className="text-[11px] text-red-500 hover:text-red-600 transition-colors font-medium"
+                          >
+                            Delete
                           </button>
                         </div>
                       )}

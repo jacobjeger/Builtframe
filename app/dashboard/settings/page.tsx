@@ -53,7 +53,6 @@ export default function SettingsPage() {
   const planLabels: Record<string, string> = {
     free: 'Free',
     pro: 'Pro — $29/mo',
-    agency: 'Agency — $79/mo',
   };
 
   return (

@@ -173,3 +173,55 @@ export async function PATCH(request: Request) {
 
   return NextResponse.json(data);
 }
+
+export async function DELETE(request: Request) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const body = await request.json();
+  const { id } = body;
+
+  if (!id) {
+    return NextResponse.json({ error: 'id required' }, { status: 400 });
+  }
+
+  const { data: invoice } = await supabase
+    .from('invoices')
+    .select('id, status, project_id')
+    .eq('id', id)
+    .single();
+
+  if (!invoice) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
+  if (invoice.status !== 'draft') {
+    return NextResponse.json({ error: 'Only draft invoices can be deleted' }, { status: 400 });
+  }
+
+  const { data: ownedProject } = await supabase
+    .from('projects')
+    .select('id')
+    .eq('id', invoice.project_id)
+    .eq('dev_id', user.id)
+    .single();
+
+  if (!ownedProject) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
+  const { error } = await supabase
+    .from('invoices')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}

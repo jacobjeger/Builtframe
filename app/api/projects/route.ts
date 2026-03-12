@@ -50,3 +50,68 @@ export async function POST(request: Request) {
 
   return NextResponse.json(data);
 }
+
+export async function PATCH(request: Request) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const body = await request.json();
+  const { id, ...updates } = body;
+
+  if (!id) {
+    return NextResponse.json({ error: 'id required' }, { status: 400 });
+  }
+
+  const allowed: Record<string, unknown> = {};
+  for (const key of ['name', 'client_name', 'client_email', 'website_url', 'status']) {
+    if (key in updates) {
+      allowed[key] = updates[key];
+    }
+  }
+
+  const { data, error } = await supabase
+    .from('projects')
+    .update(allowed)
+    .eq('id', id)
+    .eq('dev_id', user.id)
+    .select()
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json(data);
+}
+
+export async function DELETE(request: Request) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const body = await request.json();
+  const { id } = body;
+
+  if (!id) {
+    return NextResponse.json({ error: 'id required' }, { status: 400 });
+  }
+
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', id)
+    .eq('dev_id', user.id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}
