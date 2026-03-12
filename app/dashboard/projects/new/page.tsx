@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, FolderPlus, User, Globe } from 'lucide-react';
+import { ArrowLeft, FolderPlus, User, Globe, Smartphone } from 'lucide-react';
 import Link from 'next/link';
 
 export default function NewProjectPage() {
@@ -14,6 +14,8 @@ export default function NewProjectPage() {
     client_name: '',
     client_email: '',
     website_url: '',
+    preview_type: 'website' as 'website' | 'android' | 'ios',
+    apk_url: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,20 +94,67 @@ export default function NewProjectPage() {
               />
             </div>
             <div>
-              <label htmlFor="website_url" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Website URL
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                Preview type
               </label>
-              <div className="relative">
-                <Globe size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  id="website_url"
-                  type="url"
-                  value={form.website_url}
-                  onChange={(e) => setForm({ ...form, website_url: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-sm"
-                  placeholder="https://example.com"
-                />
+              <div className="flex gap-1 bg-slate-100 rounded-lg p-0.5">
+                {(['website', 'android', 'ios'] as const).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setForm({ ...form, preview_type: type })}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      form.preview_type === type
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    {type === 'website' ? <Globe size={14} /> : <Smartphone size={14} />}
+                    {type === 'website' ? 'Website' : type === 'android' ? 'Android' : 'iOS'}
+                  </button>
+                ))}
               </div>
+            </div>
+            <div>
+              {form.preview_type === 'android' ? (
+                <>
+                  <label htmlFor="apk_url" className="block text-sm font-medium text-slate-700 mb-1.5">
+                    APK download URL
+                  </label>
+                  <div className="relative">
+                    <Smartphone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      id="apk_url"
+                      type="url"
+                      value={form.apk_url}
+                      onChange={(e) => setForm({ ...form, apk_url: e.target.value })}
+                      className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-sm"
+                      placeholder="https://example.com/app.apk"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <label htmlFor="website_url" className="block text-sm font-medium text-slate-700 mb-1.5">
+                    {form.preview_type === 'ios' ? 'App URL (TestFlight or web)' : 'Website URL'}
+                  </label>
+                  <div className="relative">
+                    {form.preview_type === 'ios' ? (
+                      <Smartphone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    ) : (
+                      <Globe size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    )}
+                    <input
+                      id="website_url"
+                      type="url"
+                      value={form.website_url}
+                      onChange={(e) => setForm({ ...form, website_url: e.target.value })}
+                      className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-sm"
+                      placeholder={form.preview_type === 'ios' ? 'https://testflight.apple.com/...' : 'https://example.com'}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

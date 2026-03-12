@@ -63,6 +63,8 @@ export async function POST(request: Request) {
       client_name: body.client_name || null,
       client_email: body.client_email || null,
       website_url: body.website_url || null,
+      preview_type: body.preview_type || 'website',
+      apk_url: body.apk_url || null,
     })
     .select()
     .single();
@@ -90,7 +92,7 @@ export async function PATCH(request: Request) {
   }
 
   const allowed: Record<string, unknown> = {};
-  for (const key of ['name', 'client_name', 'client_email', 'website_url', 'status']) {
+  for (const key of ['name', 'client_name', 'client_email', 'website_url', 'status', 'preview_type', 'apk_url']) {
     if (key in updates) {
       allowed[key] = updates[key];
     }

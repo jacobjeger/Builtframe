@@ -47,10 +47,11 @@ export default function ProjectDetailPage() {
   const [invoiceAmount, setInvoiceAmount] = useState('');
   const [invoiceDueDate, setInvoiceDueDate] = useState('');
   const [creatingInvoice, setCreatingInvoice] = useState(false);
+  const [sendingInvoice, setSendingInvoice] = useState<string | null>(null);
 
   // Project edit/delete state
   const [editing, setEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', client_name: '', client_email: '', website_url: '', status: 'active' });
+  const [editForm, setEditForm] = useState({ name: '', client_name: '', client_email: '', website_url: '', status: 'active', preview_type: 'website' as 'website' | 'android' | 'ios', apk_url: '' });
   const [savingProject, setSavingProject] = useState(false);
   const [deletingProject, setDeletingProject] = useState(false);
 
@@ -158,6 +159,8 @@ export default function ProjectDetailPage() {
       client_email: project.client_email || '',
       website_url: project.website_url || '',
       status: project.status,
+      preview_type: project.preview_type || 'website',
+      apk_url: project.apk_url || '',
     });
     setEditing(true);
   };
@@ -243,6 +246,27 @@ export default function ProjectDetailPage() {
         prev.map((inv) => (inv.id === invoiceId ? { ...inv, status: status as Invoice['status'] } : inv))
       );
     }
+  };
+
+  const handleSendInvoice = async (invoiceId: string) => {
+    setSendingInvoice(invoiceId);
+    // Try Stripe checkout first
+    const stripeRes = await fetch('/api/stripe/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invoice_id: invoiceId }),
+    });
+
+    if (stripeRes.ok) {
+      const updated = await stripeRes.json();
+      setInvoices((prev) =>
+        prev.map((inv) => (inv.id === invoiceId ? updated : inv))
+      );
+    } else {
+      // Stripe not configured — fall back to plain send
+      await handleInvoiceStatusChange(invoiceId, 'sent');
+    }
+    setSendingInvoice(null);
   };
 
   if (loading) {
@@ -349,13 +373,40 @@ export default function ProjectDetailPage() {
                 placeholder="Client email"
                 className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
-              <input
-                type="url"
-                value={editForm.website_url}
-                onChange={(e) => setEditForm({ ...editForm, website_url: e.target.value })}
-                placeholder="Website URL"
-                className="col-span-2 px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
+              <div className="col-span-2 flex gap-1 bg-slate-100 rounded-lg p-0.5">
+                {(['website', 'android', 'ios'] as const).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setEditForm({ ...editForm, preview_type: type })}
+                    className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      editForm.preview_type === type
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    {type === 'website' ? 'Website' : type === 'android' ? 'Android' : 'iOS'}
+                  </button>
+                ))}
+              </div>
+              {editForm.preview_type === 'website' || editForm.preview_type === 'ios' ? (
+                <input
+                  type="url"
+                  value={editForm.website_url}
+                  onChange={(e) => setEditForm({ ...editForm, website_url: e.target.value })}
+                  placeholder={editForm.preview_type === 'ios' ? 'TestFlight or web app URL' : 'Website URL'}
+                  className="col-span-2 px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+              ) : (
+                <input
+                  type="url"
+                  value={editForm.apk_url}
+                  onChange={(e) => setEditForm({ ...editForm, apk_url: e.target.value })}
+                  placeholder="APK download URL"
+                  className="col-span-2 px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+              )
+              }
             </div>
             <div className="flex items-center justify-between">
               <button
@@ -379,9 +430,11 @@ export default function ProjectDetailPage() {
         )}
 
         <div className="flex-1 p-4 min-h-0 bg-slate-50">
-          {project.website_url ? (
+          {(project.website_url || (project.preview_type === 'android' && project.apk_url)) ? (
             <PreviewFrame
-              websiteUrl={project.website_url}
+              websiteUrl={project.website_url || ''}
+              previewType={project.preview_type}
+              apkUrl={project.apk_url}
               annotations={annotations}
               activeAnnotationId={activeAnnotation?.id || null}
               onAnnotationClick={(a) => setActiveAnnotation(a)}
@@ -389,7 +442,7 @@ export default function ProjectDetailPage() {
             />
           ) : (
             <div className="flex items-center justify-center h-full bg-white rounded-xl border border-slate-200">
-              <p className="text-slate-400 text-sm">No website URL set for this project</p>
+              <p className="text-slate-400 text-sm">No preview URL set for this project</p>
             </div>
           )}
         </div>
@@ -608,10 +661,11 @@ export default function ProjectDetailPage() {
                       {invoice.status === 'draft' && (
                         <div className="flex gap-3 mt-1.5 ml-1">
                           <button
-                            onClick={() => handleInvoiceStatusChange(invoice.id, 'sent')}
-                            className="text-[11px] text-primary hover:text-primary-dark transition-colors font-medium"
+                            onClick={() => handleSendInvoice(invoice.id)}
+                            disabled={sendingInvoice === invoice.id}
+                            className="text-[11px] text-primary hover:text-primary-dark transition-colors font-medium disabled:opacity-50"
                           >
-                            Mark as sent
+                            {sendingInvoice === invoice.id ? 'Sending...' : 'Send with payment link'}
                           </button>
                           <button
                             onClick={() => handleDeleteInvoice(invoice.id)}

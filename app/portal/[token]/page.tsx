@@ -175,9 +175,11 @@ export default function ClientPortalPage() {
       <div className="flex-1 flex flex-col lg:flex-row min-h-0">
         {/* Preview */}
         <div className="flex-1 p-4 min-h-0">
-          {project.website_url ? (
+          {(project.website_url || (project.preview_type === 'android' && project.apk_url)) ? (
             <PreviewFrame
-              websiteUrl={project.website_url}
+              websiteUrl={project.website_url || ''}
+              previewType={project.preview_type}
+              apkUrl={project.apk_url}
               annotations={annotations}
               activeAnnotationId={activeAnnotation?.id || null}
               onAnnotationClick={(a) => { setActiveAnnotation(a); setTab('feedback'); }}
