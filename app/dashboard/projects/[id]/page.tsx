@@ -122,7 +122,10 @@ export default function ProjectDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <p className="text-gray-400">Loading project...</p>
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-slate-400">Loading project...</p>
+        </div>
       </div>
     );
   }
@@ -130,8 +133,8 @@ export default function ProjectDetailPage() {
   if (!project) {
     return (
       <div className="p-6 lg:p-8">
-        <p className="text-gray-500">Project not found</p>
-        <Link href="/dashboard" className="text-indigo-600 text-sm mt-2 inline-block">
+        <p className="text-slate-500">Project not found</p>
+        <Link href="/dashboard" className="text-primary text-sm mt-2 inline-block hover:text-primary-dark transition-colors">
           Back to projects
         </Link>
       </div>
@@ -139,7 +142,7 @@ export default function ProjectDetailPage() {
   }
 
   const statusIcons: Record<string, React.ReactNode> = {
-    open: <AlertCircle size={12} className="text-yellow-500" />,
+    open: <AlertCircle size={12} className="text-amber-500" />,
     in_progress: <Clock size={12} className="text-blue-500" />,
     resolved: <CheckCircle size={12} className="text-green-500" />,
   };
@@ -148,21 +151,21 @@ export default function ProjectDetailPage() {
     <div className="flex flex-col lg:flex-row h-screen">
       {/* Main preview area */}
       <div className="flex-1 flex flex-col min-h-0">
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 bg-white">
-          <Link href="/dashboard" className="text-gray-400 hover:text-gray-600">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 bg-white">
+          <Link href="/dashboard" className="text-slate-400 hover:text-slate-600 transition-colors">
             <ArrowLeft size={20} />
           </Link>
           <div className="flex-1 min-w-0">
-            <h1 className="font-semibold text-gray-900 truncate">{project.name}</h1>
+            <h1 className="font-semibold text-slate-900 truncate">{project.name}</h1>
             {project.client_name && (
-              <p className="text-xs text-gray-500">{project.client_name}</p>
+              <p className="text-xs text-slate-500">{project.client_name}</p>
             )}
           </div>
           {project.client_email && (
             <button
               onClick={handleInvite}
               disabled={inviting}
-              className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
             >
               <Send size={12} />
               {inviting ? 'Sending...' : 'Invite Client'}
@@ -170,7 +173,7 @@ export default function ProjectDetailPage() {
           )}
         </div>
 
-        <div className="flex-1 p-4 min-h-0">
+        <div className="flex-1 p-4 min-h-0 bg-slate-50">
           {project.website_url ? (
             <PreviewFrame
               websiteUrl={project.website_url}
@@ -180,40 +183,34 @@ export default function ProjectDetailPage() {
               onCreateAnnotation={handleCreateAnnotation}
             />
           ) : (
-            <div className="flex items-center justify-center h-full bg-gray-50 rounded-xl border border-gray-200">
-              <p className="text-gray-400">No website URL set for this project</p>
+            <div className="flex items-center justify-center h-full bg-white rounded-xl border border-slate-200">
+              <p className="text-slate-400 text-sm">No website URL set for this project</p>
             </div>
           )}
         </div>
       </div>
 
       {/* Sidebar */}
-      <div className="w-full lg:w-96 border-t lg:border-t-0 lg:border-l border-gray-200 bg-white flex flex-col h-80 lg:h-auto">
+      <div className="w-full lg:w-96 border-t lg:border-t-0 lg:border-l border-slate-200 bg-white flex flex-col h-80 lg:h-auto">
         {/* Tab bar */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-slate-200">
           <button
-            onClick={() => {
-              setTab('annotations');
-              setActiveAnnotation(null);
-            }}
+            onClick={() => { setTab('annotations'); setActiveAnnotation(null); }}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
               tab === 'annotations'
-                ? 'text-indigo-600 border-b-2 border-indigo-600'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-slate-500 hover:text-slate-700'
             }`}
           >
             <Pin size={16} />
             Annotations ({annotations.length})
           </button>
           <button
-            onClick={() => {
-              setTab('messages');
-              setActiveAnnotation(null);
-            }}
+            onClick={() => { setTab('messages'); setActiveAnnotation(null); }}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
               tab === 'messages'
-                ? 'text-indigo-600 border-b-2 border-indigo-600'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-slate-500 hover:text-slate-700'
             }`}
           >
             <MessageSquare size={16} />
@@ -234,10 +231,9 @@ export default function ProjectDetailPage() {
             />
           ) : tab === 'annotations' ? (
             <div className="h-full flex flex-col">
-              {/* New annotation prompt */}
               {pendingPosition && (
-                <div className="p-3 border-b border-gray-200 bg-indigo-50">
-                  <p className="text-xs text-indigo-600 font-medium mb-2">
+                <div className="p-3 border-b border-slate-200 bg-primary/5">
+                  <p className="text-xs text-primary font-medium mb-2">
                     New annotation at ({Math.round(pendingPosition.x)}%, {Math.round(pendingPosition.y)}%)
                   </p>
                   <div className="flex gap-2">
@@ -246,23 +242,20 @@ export default function ProjectDetailPage() {
                       value={newAnnotationComment}
                       onChange={(e) => setNewAnnotationComment(e.target.value)}
                       placeholder="Add a comment..."
-                      className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="flex-1 px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                       autoFocus
                       onKeyDown={(e) => e.key === 'Enter' && submitAnnotation()}
                     />
                     <button
                       onClick={submitAnnotation}
                       disabled={!newAnnotationComment.trim()}
-                      className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm disabled:opacity-50 hover:bg-indigo-700"
+                      className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm disabled:opacity-50 hover:bg-primary-dark transition-colors"
                     >
                       Add
                     </button>
                     <button
-                      onClick={() => {
-                        setPendingPosition(null);
-                        setNewAnnotationComment('');
-                      }}
-                      className="px-3 py-1.5 text-gray-500 text-sm hover:text-gray-700"
+                      onClick={() => { setPendingPosition(null); setNewAnnotationComment(''); }}
+                      className="px-3 py-1.5 text-slate-500 text-sm hover:text-slate-700 transition-colors"
                     >
                       Cancel
                     </button>
@@ -272,31 +265,37 @@ export default function ProjectDetailPage() {
 
               <div className="flex-1 overflow-y-auto">
                 {annotations.length === 0 ? (
-                  <p className="text-sm text-gray-400 text-center py-8">
-                    No annotations yet. Switch to annotation mode and click on the preview to add one.
-                  </p>
+                  <div className="text-center py-12 px-4">
+                    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <Pin size={20} className="text-slate-400" />
+                    </div>
+                    <p className="text-sm text-slate-500 font-medium">No annotations yet</p>
+                    <p className="text-xs text-slate-400 mt-1">Switch to annotation mode and click on the preview to add one</p>
+                  </div>
                 ) : (
-                  <div className="divide-y divide-gray-100">
+                  <div className="divide-y divide-slate-100">
                     {annotations.map((a, i) => (
                       <button
                         key={a.id}
                         onClick={() => setActiveAnnotation(a)}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-center gap-3"
                       >
-                        <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center font-bold shrink-0">
+                        <span className={`w-6 h-6 rounded-full text-white text-xs flex items-center justify-center font-bold shrink-0 ${
+                          a.status === 'resolved' ? 'bg-green-500' : 'bg-primary'
+                        }`}>
                           {i + 1}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900 truncate">
+                          <p className="text-sm text-slate-900 truncate">
                             {a.author_name || a.author_type} &middot;{' '}
                             {new Date(a.created_at).toLocaleDateString()}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="flex items-center gap-1 text-xs text-gray-400">
+                            <span className="flex items-center gap-1 text-xs text-slate-400">
                               {statusIcons[a.status]} {a.status.replace('_', ' ')}
                             </span>
                             {a.comment_count !== undefined && (
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-slate-400">
                                 {a.comment_count} comment{a.comment_count !== 1 ? 's' : ''}
                               </span>
                             )}
@@ -308,10 +307,10 @@ export default function ProjectDetailPage() {
                 )}
               </div>
 
-              <div className="p-3 border-t border-gray-200">
+              <div className="p-3 border-t border-slate-200">
                 <button
                   onClick={fetchAnnotations}
-                  className="w-full flex items-center justify-center gap-2 text-xs text-gray-500 hover:text-gray-700 py-1"
+                  className="w-full flex items-center justify-center gap-2 text-xs text-slate-500 hover:text-slate-700 py-1 transition-colors"
                 >
                   <RefreshCw size={12} />
                   Refresh

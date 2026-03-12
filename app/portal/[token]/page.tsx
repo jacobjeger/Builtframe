@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { MessageSquare, Pin } from 'lucide-react';
+import { MessageSquare, Pin, MousePointerClick } from 'lucide-react';
 import PreviewFrame from '@/components/PreviewFrame';
 import CommentPanel from '@/components/CommentPanel';
 import MessageThread from '@/components/MessageThread';
@@ -93,10 +93,11 @@ export default function ClientPortalPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-indigo-600 mb-2">Builtframe</h1>
-          <p className="text-gray-400">Loading your portal...</p>
+          <span className="text-xl font-extrabold text-slate-900 tracking-tight">Builtframe</span>
+          <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mt-4" />
+          <p className="text-sm text-slate-400 mt-3">Loading your portal...</p>
         </div>
       </div>
     );
@@ -104,48 +105,42 @@ export default function ClientPortalPage() {
 
   if (error || !project) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md">
-          <h1 className="text-2xl font-bold text-indigo-600 mb-4">Builtframe</h1>
-          <p className="text-gray-600">{error || 'Project not found'}</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center max-w-md px-6">
+          <span className="text-xl font-extrabold text-slate-900 tracking-tight">Builtframe</span>
+          <p className="text-slate-500 mt-4">{error || 'Project not found'}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+      <header className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-lg font-bold text-indigo-600">Builtframe</span>
-          <span className="text-gray-300">|</span>
-          <span className="text-sm font-medium text-gray-900">{project.name}</span>
+          <span className="text-lg font-extrabold text-slate-900 tracking-tight">Builtframe</span>
+          <span className="text-slate-200">|</span>
+          <span className="text-sm font-medium text-slate-700">{project.name}</span>
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => {
-              setTab('feedback');
-              setActiveAnnotation(null);
-            }}
+            onClick={() => { setTab('feedback'); setActiveAnnotation(null); }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               tab === 'feedback'
-                ? 'bg-indigo-50 text-indigo-600'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-primary/10 text-primary'
+                : 'text-slate-500 hover:text-slate-700'
             }`}
           >
             <Pin size={16} />
             Feedback
           </button>
           <button
-            onClick={() => {
-              setTab('messages');
-              setActiveAnnotation(null);
-            }}
+            onClick={() => { setTab('messages'); setActiveAnnotation(null); }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               tab === 'messages'
-                ? 'bg-indigo-50 text-indigo-600'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-primary/10 text-primary'
+                : 'text-slate-500 hover:text-slate-700'
             }`}
           >
             <MessageSquare size={16} />
@@ -163,21 +158,18 @@ export default function ClientPortalPage() {
               websiteUrl={project.website_url}
               annotations={annotations}
               activeAnnotationId={activeAnnotation?.id || null}
-              onAnnotationClick={(a) => {
-                setActiveAnnotation(a);
-                setTab('feedback');
-              }}
+              onAnnotationClick={(a) => { setActiveAnnotation(a); setTab('feedback'); }}
               onCreateAnnotation={handleCreateAnnotation}
             />
           ) : (
-            <div className="flex items-center justify-center h-full bg-white rounded-xl border border-gray-200">
-              <p className="text-gray-400">Preview not available</p>
+            <div className="flex items-center justify-center h-full bg-white rounded-xl border border-slate-200">
+              <p className="text-slate-400 text-sm">Preview not available</p>
             </div>
           )}
         </div>
 
         {/* Side panel */}
-        <div className="w-full lg:w-96 border-t lg:border-t-0 lg:border-l border-gray-200 bg-white flex flex-col h-80 lg:h-auto">
+        <div className="w-full lg:w-96 border-t lg:border-t-0 lg:border-l border-slate-200 bg-white flex flex-col h-80 lg:h-auto">
           {tab === 'messages' ? (
             <MessageThread
               projectId={project.id}
@@ -197,35 +189,29 @@ export default function ClientPortalPage() {
             />
           ) : (
             <div className="flex flex-col h-full">
-              {/* New annotation prompt */}
               {pendingPosition && (
-                <div className="p-3 border-b border-gray-200 bg-indigo-50">
-                  <p className="text-xs text-indigo-600 font-medium mb-2">
-                    Leave your feedback
-                  </p>
+                <div className="p-3 border-b border-slate-200 bg-primary/5">
+                  <p className="text-xs text-primary font-medium mb-2">Leave your feedback</p>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       value={newAnnotationComment}
                       onChange={(e) => setNewAnnotationComment(e.target.value)}
                       placeholder="What would you like to change?"
-                      className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="flex-1 px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                       autoFocus
                       onKeyDown={(e) => e.key === 'Enter' && submitAnnotation()}
                     />
                     <button
                       onClick={submitAnnotation}
                       disabled={!newAnnotationComment.trim()}
-                      className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm disabled:opacity-50 hover:bg-indigo-700"
+                      className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm disabled:opacity-50 hover:bg-primary-dark transition-colors"
                     >
                       Add
                     </button>
                     <button
-                      onClick={() => {
-                        setPendingPosition(null);
-                        setNewAnnotationComment('');
-                      }}
-                      className="px-3 py-1.5 text-gray-500 text-sm hover:text-gray-700"
+                      onClick={() => { setPendingPosition(null); setNewAnnotationComment(''); }}
+                      className="px-3 py-1.5 text-slate-500 text-sm hover:text-slate-700 transition-colors"
                     >
                       Cancel
                     </button>
@@ -235,30 +221,35 @@ export default function ClientPortalPage() {
 
               <div className="flex-1 overflow-y-auto">
                 {annotations.length === 0 ? (
-                  <div className="text-center py-8 px-4">
-                    <p className="text-sm text-gray-500 mb-2">No feedback yet</p>
-                    <p className="text-xs text-gray-400">
+                  <div className="text-center py-12 px-6">
+                    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <MousePointerClick size={20} className="text-slate-400" />
+                    </div>
+                    <p className="text-sm text-slate-600 font-medium mb-1">No feedback yet</p>
+                    <p className="text-xs text-slate-400 leading-relaxed">
                       Click the &quot;Annotating&quot; button above the preview, then click anywhere on the website to leave feedback.
                     </p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-100">
+                  <div className="divide-y divide-slate-100">
                     {annotations.map((a, i) => (
                       <button
                         key={a.id}
                         onClick={() => setActiveAnnotation(a)}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-center gap-3"
                       >
-                        <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center font-bold shrink-0">
+                        <span className={`w-6 h-6 rounded-full text-white text-xs flex items-center justify-center font-bold shrink-0 ${
+                          a.status === 'resolved' ? 'bg-green-500' : 'bg-primary'
+                        }`}>
                           {i + 1}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900 truncate">
+                          <p className="text-sm text-slate-900 truncate">
                             {a.author_name} &middot; {new Date(a.created_at).toLocaleDateString()}
                           </p>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-slate-400">
                             {a.status === 'resolved' ? 'Resolved' : a.status === 'in_progress' ? 'In progress' : 'Open'}
-                            {a.comment_count !== undefined && ` · ${a.comment_count} comment${a.comment_count !== 1 ? 's' : ''}`}
+                            {a.comment_count !== undefined && ` \u00B7 ${a.comment_count} comment${a.comment_count !== 1 ? 's' : ''}`}
                           </span>
                         </div>
                       </button>

@@ -18,10 +18,7 @@ export default function LoginPage() {
     setLoading(true);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setError(error.message);
@@ -34,51 +31,54 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Sign in to your account</h2>
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+      <h2 className="text-2xl font-bold text-slate-900 mb-1">Welcome back</h2>
+      <p className="text-sm text-slate-500 mb-6">Sign in to your Builtframe account</p>
+
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email
-          </label>
+          <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
           <input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-slate-50/50 text-sm"
             placeholder="you@example.com"
           />
         </div>
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Password
-          </label>
+          <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
           <input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            placeholder="••••••••"
+            className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-slate-50/50 text-sm"
+            placeholder="Enter your password"
           />
         </div>
+
         {error && (
-          <p className="text-sm text-red-600">{error}</p>
+          <div className="bg-red-50 border border-red-100 rounded-lg px-4 py-2.5">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
         )}
+
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 font-medium"
+          className="w-full bg-primary text-white py-2.5 px-4 rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 font-medium text-sm shadow-sm shadow-primary/20"
         >
           {loading ? 'Signing in...' : 'Sign in'}
         </button>
       </form>
-      <p className="text-center text-sm text-gray-500 mt-6">
+
+      <p className="text-center text-sm text-slate-500 mt-6">
         Don&apos;t have an account?{' '}
-        <Link href="/signup" className="text-indigo-600 hover:text-indigo-700 font-medium">
+        <Link href="/signup" className="text-primary hover:text-primary-dark font-medium transition-colors">
           Sign up
         </Link>
       </p>

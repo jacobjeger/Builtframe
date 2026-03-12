@@ -29,8 +29,8 @@ export default function AnnotationPin({
         resolved
           ? 'bg-green-500 border-white text-white'
           : isActive
-            ? 'bg-indigo-700 border-white text-white scale-125 shadow-lg'
-            : 'bg-indigo-600 border-white text-white hover:scale-110 shadow-md'
+            ? 'bg-primary-dark border-white text-white scale-125 shadow-lg shadow-primary/30'
+            : 'bg-primary border-white text-white hover:scale-110 shadow-md shadow-primary/20'
       }`}
       style={{
         left: `${x}%`,

@@ -27,7 +27,6 @@ export default function MessageThread({
   useEffect(() => {
     fetchMessages();
 
-    // Real-time subscription
     const supabase = createClient();
     const channel = supabase
       .channel(`messages:${projectId}`)
@@ -89,19 +88,20 @@ export default function MessageThread({
 
     if (res.ok) {
       setNewMessage('');
-      // Message will arrive via realtime
     }
     setSending(false);
   };
 
   return (
     <div className="flex flex-col h-full">
-      {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {loading ? (
-          <p className="text-sm text-gray-400 text-center py-8">Loading messages...</p>
+          <div className="text-center py-8">
+            <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
+            <p className="text-xs text-slate-400 mt-2">Loading messages...</p>
+          </div>
         ) : messages.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-8">
+          <p className="text-sm text-slate-400 text-center py-8">
             No messages yet. Start the conversation!
           </p>
         ) : (
@@ -112,7 +112,7 @@ export default function MessageThread({
                 message.author_type === authorType ? 'items-end' : 'items-start'
               }`}
             >
-              <span className="text-xs text-gray-400 mb-1">
+              <span className="text-[10px] text-slate-400 mb-1">
                 {message.author_name} &middot;{' '}
                 {new Date(message.created_at).toLocaleTimeString([], {
                   hour: '2-digit',
@@ -122,8 +122,8 @@ export default function MessageThread({
               <div
                 className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
                   message.author_type === authorType
-                    ? 'bg-indigo-600 text-white rounded-br-md'
-                    : 'bg-gray-100 text-gray-900 rounded-bl-md'
+                    ? 'bg-primary text-white rounded-br-md'
+                    : 'bg-slate-100 text-slate-800 rounded-bl-md'
                 }`}
               >
                 {message.body}
@@ -133,22 +133,21 @@ export default function MessageThread({
         )}
       </div>
 
-      {/* Input */}
       <form
         onSubmit={handleSubmit}
-        className="flex items-center gap-2 px-4 py-3 border-t border-gray-200 bg-white"
+        className="flex items-center gap-2 px-4 py-3 border-t border-slate-200 bg-white"
       >
         <input
           type="text"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Type a message..."
-          className="flex-1 px-4 py-2.5 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className="flex-1 px-4 py-2.5 border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
         />
         <button
           type="submit"
           disabled={!newMessage.trim() || sending}
-          className="p-2.5 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          className="p-2.5 bg-primary text-white rounded-full hover:bg-primary-dark disabled:opacity-50 transition-colors"
         >
           <Send size={18} />
         </button>

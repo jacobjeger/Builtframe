@@ -39,23 +39,23 @@ export default function PreviewFrame({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Browser chrome mockup */}
-      <div className="bg-gray-100 border border-gray-200 rounded-t-xl px-4 py-2.5 flex items-center gap-3">
+      {/* Browser chrome */}
+      <div className="bg-slate-100 border border-slate-200 rounded-t-xl px-4 py-2.5 flex items-center gap-3">
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-red-400" />
-          <div className="w-3 h-3 rounded-full bg-yellow-400" />
-          <div className="w-3 h-3 rounded-full bg-green-400" />
+          <div className="w-3 h-3 rounded-full bg-slate-300" />
+          <div className="w-3 h-3 rounded-full bg-slate-300" />
+          <div className="w-3 h-3 rounded-full bg-slate-300" />
         </div>
-        <div className="flex-1 bg-white rounded-md px-3 py-1 text-sm text-gray-500 truncate border border-gray-200">
+        <div className="flex-1 bg-white rounded-md px-3 py-1.5 text-sm text-slate-500 truncate border border-slate-200">
           {websiteUrl}
         </div>
         {showModeToggle && (
           <button
             onClick={() => setAnnotationMode(!annotationMode)}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               annotationMode
-                ? 'bg-indigo-600 text-white'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                ? 'bg-primary text-white shadow-sm shadow-primary/20'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
             }`}
           >
             {annotationMode ? (
@@ -72,7 +72,7 @@ export default function PreviewFrame({
       </div>
 
       {/* Preview area */}
-      <div className="relative flex-1 border border-t-0 border-gray-200 rounded-b-xl overflow-hidden bg-white">
+      <div className="relative flex-1 border border-t-0 border-slate-200 rounded-b-xl overflow-hidden bg-white">
         <iframe
           src={websiteUrl}
           className="w-full h-full border-0"
