@@ -47,6 +47,18 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Verify the dev owns this project
+  const { data: project } = await supabase
+    .from('projects')
+    .select('id')
+    .eq('id', projectId)
+    .eq('dev_id', user.id)
+    .single();
+
+  if (!project) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   const { data, error } = await supabase
     .from('invoices')
     .select('*')
@@ -124,6 +136,28 @@ export async function PATCH(request: Request) {
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Verify invoice belongs to a project the dev owns
+  const { data: invoice } = await supabase
+    .from('invoices')
+    .select('id, project_id')
+    .eq('id', id)
+    .single();
+
+  if (!invoice) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
+  const { data: project } = await supabase
+    .from('projects')
+    .select('id')
+    .eq('id', invoice.project_id)
+    .eq('dev_id', user.id)
+    .single();
+
+  if (!project) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
   const { data, error } = await supabase

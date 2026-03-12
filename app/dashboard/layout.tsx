@@ -62,6 +62,9 @@ export default function DashboardLayout({
           }`}
         >
           <div className="flex flex-col h-full">
+            {/* Gradient accent line */}
+            <div className="h-0.5 bg-gradient-to-r from-primary via-accent to-primary" />
+
             <div className="hidden lg:flex items-center px-6 py-5 border-b border-slate-800">
               <Link href="/dashboard" className="text-lg font-extrabold text-white tracking-tight">
                 Builtframe
@@ -80,8 +83,8 @@ export default function DashboardLayout({
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-primary/20 text-white'
-                        : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                        ? 'bg-primary/20 text-white border-l-[3px] border-primary'
+                        : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200 border-l-[3px] border-transparent'
                     }`}
                   >
                     <Icon size={20} />
@@ -95,7 +98,7 @@ export default function DashboardLayout({
             <div className="p-3 border-t border-slate-800">
               {userName && (
                 <div className="flex items-center gap-3 px-3 py-2 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0 ring-2 ring-primary/30">
                     <User size={16} className="text-primary-light" />
                   </div>
                   <div className="min-w-0">
