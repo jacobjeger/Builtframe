@@ -52,10 +52,20 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
 }
 
+/* Auth layout gradient panel */
 .hero-gradient {
   background: linear-gradient(135deg, var(--slate-950) 0%, var(--slate-800) 50%, #0f2847 100%);
 }
 
+/* Decorative glow blobs for auth panel */
+.glow-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.6;
+}
+
+/* Project card hover effect */
 .card-glow {
   transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
@@ -64,3 +74,11 @@ body {
   transform: translateY(-2px);
 }
 
+/* Subtle bounce for hero pin */
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
